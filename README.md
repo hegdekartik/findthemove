@@ -17,15 +17,17 @@ FindTheMove is an interactive chess puzzle application designed to help players 
 * **Review Protection**: Users can replay or review previously attempted puzzles without risking further rating changes.
 
 ### 3. Interactive Gameplay
-* **Visual Board**: Utilizes `react-chessboard` for a clean, responsive, and interactive chess board.
+* **Visual Board**: Utilizes `react-chessboard` for a clean, responsive, and interactive chess board. Includes a subtle board-flip option to view the position from the opponent's perspective.
 * **Move Validation**: Powered by `chess.js` to ensure all moves are strictly legal and to generate plausible incorrect options for the user to choose from.
-* **Detailed Explanations**: After making a choice, users receive a breakdown of why the correct move works and why the alternative fails.
+* **Scannable Explanations**: After making a choice, users receive a structured breakdown of why the correct move works (✅), why the alternative fails (❌), and the specific tactic involved (💡).
+* **On-Board Animations**: The correct move is visually animated on the main board using arrows once the answer is revealed, reinforcing the learning experience.
 
 ## 🎨 Design Methods & UX Philosophy
 
 ### 1. Aesthetic & Theming
 * **Dark Mode Default**: Built using Tailwind CSS's `stone` color palette to reduce eye strain during long puzzle-solving sessions. The deep gray/brown tones provide a premium, focused environment.
 * **High Contrast Elements**: Interactive elements (buttons, dropdowns) use distinct background colors (like `blue-600` for primary actions) to stand out against the dark background.
+* **Clear Indicators**: A subtle "⬛ Black to move" / "⬜ White to move" indicator above the board removes ambiguity for beginners.
 
 ### 2. Immediate Visual Feedback
 * **Color Coding**: Success is immediately communicated via green borders and glowing shadows (`shadow-green-500/30`), while failures use red (`shadow-red-500/30`).
@@ -33,6 +35,7 @@ FindTheMove is an interactive chess puzzle application designed to help players 
 
 ### 3. Smooth Animations
 * **Framer Motion Integration**: The application uses `motion/react` to animate the appearance of the feedback panel and the transition between puzzles. This prevents jarring layout shifts and makes the experience feel polished.
+* **Valence-Matched Feedback**: Success triggers a satisfying, bouncy entrance animation for the feedback panel, while failure is met with a faster, more subdued reveal to match the emotional tone.
 * **Loading States**: Spinners (`Loader2` from Lucide) and disabled button states prevent users from interacting with the app while a dynamic puzzle is being fetched.
 
 ### 4. Resilient Architecture
