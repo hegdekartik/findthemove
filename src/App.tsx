@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, XCircle, ArrowRight, RotateCcw, Loader2, Settings2, ChevronDown, Eye, Trophy, ArrowUpDown } from 'lucide-react';
+import { CheckCircle2, XCircle, ArrowRight, RotateCcw, Loader2, Settings2, ChevronDown, Eye, Trophy } from 'lucide-react';
 import { STATIC_PUZZLES, type Puzzle } from './puzzles';
 
 type Difficulty = 'easy' | 'medium' | 'hard' | 'any';
@@ -21,13 +21,11 @@ export default function App() {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [userRating, setUserRating] = useState(1500);
   const [attempts, setAttempts] = useState<Record<string, Attempt>>({});
-  const [isFlipped, setIsFlipped] = useState(false);
 
   // Initialize puzzles based on difficulty
   useEffect(() => {
     setCurrentPuzzleIndex(0);
     setSelectedMove(null);
-    setIsFlipped(false);
     if (difficulty === 'any') {
       setPuzzles([]); // Will trigger fetch
     } else {
@@ -85,11 +83,7 @@ export default function App() {
         turn,
         correctMove,
         incorrectMove,
-        explanation: {
-          correct: `The correct move is ${correctMove}.`,
-          incorrect: `Other moves fail to capitalize on the position.`,
-          tactic: `Lichess Rating: ${data.puzzle.rating}`
-        },
+        explanation: `The correct move is ${correctMove}. This puzzle has a Lichess rating of ${data.puzzle.rating}.`,
         difficulty: 'any',
         rating: data.puzzle.rating
       };
@@ -225,36 +219,22 @@ export default function App() {
           <div className="w-full max-w-[400px] bg-stone-900 p-4 rounded-2xl shadow-2xl border border-stone-800 mt-4">
             <div className="flex justify-between items-center mb-4 px-2">
               <h2 className="text-xl font-semibold text-stone-100">Current Position</h2>
-              <div className="flex items-center gap-3">
-                <span className="px-3 py-1 rounded-full text-sm font-bold bg-stone-800 text-stone-200 border border-stone-700 shadow-sm">
-                  {isWhiteTurn ? '⬜ White to move' : '⬛ Black to move'}
-                </span>
-                <button 
-                  onClick={() => setIsFlipped(!isFlipped)}
-                  className="p-2 rounded-full bg-stone-800 hover:bg-stone-700 text-stone-400 hover:text-stone-200 transition-colors"
-                  title="Flip Board"
-                >
-                  <ArrowUpDown className="w-4 h-4" />
-                </button>
-              </div>
+              <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-stone-200 text-stone-900">
+                {isWhiteTurn ? 'White to move' : 'Black to move'}
+              </span>
             </div>
             <div className="w-full rounded-md overflow-hidden border-4 border-stone-800 bg-[#ebecd0]" key={`main-${puzzle?.id}`}>
               {puzzle ? (
                 <Chessboard 
-                  id="main-board"
-                  position={puzzle.fen}
-                  boardOrientation={(isWhiteTurn ? !isFlipped : isFlipped) ? 'white' : 'black'}
-                  arePiecesDraggable={false}
-                  customDarkSquareStyle={{ backgroundColor: '#739552' }}
-                  customLightSquareStyle={{ backgroundColor: '#ebecd0' }}
-                  animationDuration={200}
-                  customArrows={selectedMove && options.find(o => o.isCorrect)?.from ? [
-                    [
-                      options.find(o => o.isCorrect)?.from as any,
-                      options.find(o => o.isCorrect)?.to as any,
-                      'rgb(34, 197, 94)'
-                    ]
-                  ] : []}
+                  options={{
+                    id: "main-board",
+                    position: puzzle.fen,
+                    boardOrientation: isWhiteTurn ? 'white' : 'black',
+                    allowDragging: false,
+                    darkSquareStyle: { backgroundColor: '#739552' },
+                    lightSquareStyle: { backgroundColor: '#ebecd0' },
+                    animationDurationInMs: 200
+                  }}
                 />
               ) : (
                 <div className="w-full aspect-square flex flex-col items-center justify-center gap-4">
@@ -300,15 +280,16 @@ export default function App() {
 
                 <div className="w-full pointer-events-none bg-[#ebecd0]" key={`opt-${puzzle?.id}-${opt.move}`}>
                   <Chessboard 
-                    id={`option-board-${opt.move.replace(/[^a-zA-Z0-9]/g, '')}`}
-                    position={opt.fen}
-                    boardOrientation={(isWhiteTurn ? !isFlipped : isFlipped) ? 'white' : 'black'}
-                    arePiecesDraggable={false}
-                    customDarkSquareStyle={{ backgroundColor: '#739552' }}
-                    customLightSquareStyle={{ backgroundColor: '#ebecd0' }}
-                    animationDuration={200}
-                    customArrows={opt.from && opt.to ? [[opt.from as any, opt.to as any]] : []}
-                    customArrowColor="rgba(255, 170, 0, 0.8)"
+                    options={{
+                      id: `option-board-${opt.move.replace(/[^a-zA-Z0-9]/g, '')}`,
+                      position: opt.fen,
+                      boardOrientation: isWhiteTurn ? 'white' : 'black',
+                      allowDragging: false,
+                      darkSquareStyle: { backgroundColor: '#739552' },
+                      lightSquareStyle: { backgroundColor: '#ebecd0' },
+                      animationDurationInMs: 200,
+                      arrows: opt.from && opt.to ? [{ startSquare: opt.from, endSquare: opt.to, color: 'rgba(255, 170, 0, 0.8)' }] : []
+                    }}
                   />
                 </div>
 
@@ -336,14 +317,13 @@ export default function App() {
         <AnimatePresence>
           {selectedMove && (
             <motion.div 
-              initial={options.find(o => o.move === selectedMove)?.isCorrect ? { opacity: 0, y: 50, scale: 0.95 } : { opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={options.find(o => o.move === selectedMove)?.isCorrect ? { type: 'spring', bounce: 0.5, duration: 0.6 } : { duration: 0.2 }}
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
               className="fixed bottom-0 left-0 right-0 bg-stone-900 border-t border-stone-700 p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-50"
             >
               <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="flex-1">
-                  <div className="flex items-center gap-4 mb-4">
+                  <div className="flex items-center gap-4 mb-2">
                     <h3 className={`text-2xl font-bold ${
                       options.find(o => o.move === selectedMove)?.isCorrect ? 'text-green-400' : 'text-red-400'
                     }`}>
@@ -359,30 +339,9 @@ export default function App() {
                       </span>
                     )}
                   </div>
-                  
-                  {puzzle?.explanation && typeof puzzle.explanation === 'object' && 'correct' in puzzle.explanation ? (
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-start gap-3">
-                        <span className="text-green-400 text-xl leading-none">✅</span>
-                        <p className="text-stone-300 text-base leading-snug">{puzzle.explanation.correct}</p>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <span className="text-red-400 text-xl leading-none">❌</span>
-                        <p className="text-stone-300 text-base leading-snug">{puzzle.explanation.incorrect}</p>
-                      </div>
-                      {puzzle.explanation.tactic && (
-                        <div className="mt-1">
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                            💡 {puzzle.explanation.tactic}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-stone-300 text-lg">
-                      {puzzle?.explanation as React.ReactNode}
-                    </p>
-                  )}
+                  <p className="text-stone-300 text-lg">
+                    {puzzle?.explanation}
+                  </p>
                 </div>
                 
                 <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
