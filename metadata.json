@@ -1,0 +1,5 @@
+{
+  "name": "FindTheMove",
+  "description": "A chess app that presents a current position and asks the user to select the best next move from two options.",
+  "requestFramePermissions": []
+}
